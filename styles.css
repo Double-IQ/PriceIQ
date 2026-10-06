@@ -65,7 +65,8 @@ input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(23
   .product-card{padding:18px}
   .product-card label,
   .currency-field{display:grid;grid-template-columns:76px minmax(0,1fr);align-items:center;column-gap:10px}
-  .product-card label+label{margin-top:12px}
+  .product-card label,
+  .product-card label+label{margin-top:0!important;margin-bottom:12px}
   .product-card label input,
   .product-card label select,
   .product-card label .price-input{margin-top:0;min-width:0;height:43px}

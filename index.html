@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="PriceIQ compares product prices using a common unit.">
+  <title>PriceIQ — Compare Prices</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app" id="price-comparator">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">PRICE COMPARISON</p>
+        <h1>PriceIQ</h1>
+        <p class="intro">See which product gives you the better price for the same amount.</p>
+      </div>
+    </header>
+
+    <section class="products" aria-label="Products to compare">
+      <article class="product-card">
+        <div class="card-heading">
+          <span class="product-number">01</span>
+          <h2>Product A</h2>
+        </div>
+        <label>Product name<input id="name-a" type="text" value="Flour" autocomplete="off"></label>
+        <div class="field-row">
+          <label>Quantity<input id="quantity-a" type="number" min="0" step="any" value="4"></label>
+          <label>Unit<select id="unit-a">
+            <option value="mg">mg</option><option value="g">g</option><option value="kg" selected>kg</option>
+            <option value="ml">ml</option><option value="l">litre</option><option value="unit">unit</option>
+            <option value="m">metre</option><option value="cm">cm</option>
+          </select></label>
+        </div>
+        <label>Price<div class="price-input"><input id="price-a" type="number" min="0" step="any" value="80"><span class="currency-preview" id="currency-preview-a">R</span></div></label>
+      </article>
+
+      <div class="versus" aria-hidden="true">VS</div>
+
+      <article class="product-card">
+        <div class="card-heading">
+          <span class="product-number">02</span>
+          <h2>Product B</h2>
+        </div>
+        <label>Product name<input id="name-b" type="text" value="Paint" autocomplete="off"></label>
+        <div class="field-row">
+          <label>Quantity<input id="quantity-b" type="number" min="0" step="any" value="12"></label>
+          <label>Unit<select id="unit-b">
+            <option value="mg">mg</option><option value="g" selected>g</option><option value="kg">kg</option>
+            <option value="ml">ml</option><option value="l">litre</option><option value="unit">unit</option>
+            <option value="m">metre</option><option value="cm">cm</option>
+          </select></label>
+        </div>
+        <label>Price<div class="price-input"><input id="price-b" type="number" min="0" step="any" value="15"><span class="currency-preview" id="currency-preview-b">R</span></div></label>
+      </article>
+    </section>
+
+    <section class="settings" aria-label="Comparison settings">
+      <div>
+        <h2>Compare prices per</h2>
+        <p>Choose the common quantity used for the comparison.</p>
+      </div>
+      <div class="preset-list" role="group" aria-label="Comparison basis">
+        <button type="button" data-basis="mg">mg</button>
+        <button type="button" data-basis="g">gram</button>
+        <button type="button" data-basis="kg" class="active">kg</button>
+        <button type="button" data-basis="ml">ml</button>
+        <button type="button" data-basis="l">litre</button>
+        <button type="button" data-basis="unit">unit</button>
+        <button type="button" data-basis="m">metre</button>
+        <button type="button" data-basis="cm">cm</button>
+      </div>
+      <label class="currency-field">Currency symbol<input id="currency" type="text" value="R" maxlength="5" autocomplete="off"></label>
+    </section>
+
+    <section class="result" aria-live="polite">
+      <p class="result-label">THE VERDICT</p>
+      <div id="pc-primary" class="pc-big"></div>
+      <div id="pc-sub" class="pc-sub"></div>
+      <div id="pc-highlight" class="pc-highlight"></div>
+      <div id="pc-detail" class="pc-detail"></div>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,8 +1,27 @@
 const factors = { mg:0.001, g:1, kg:1000, ml:1, l:1000, unit:1, m:1, cm:0.01 };
-const labels = { mg:"mg", g:"g", kg:"kg", ml:"ml", l:"litre", unit:"unit", m:"m", cm:"cm" };
+const labels = { mg:"mg", g:"grams", kg:"kg", ml:"ml", l:"litre", unit:"unit", m:"metre", cm:"cm" };
+const families = {
+  mg:"mass", g:"mass", kg:"mass",
+  ml:"volume", l:"volume",
+  unit:"count",
+  m:"length", cm:"length"
+};
+const familyBases = {
+  mass:"g",
+  volume:"ml",
+  count:"unit",
+  length:"m"
+};
+const familySuggestions = {
+  mass:"Choose mg, g or kg for both products.",
+  volume:"Choose ml or litre for both products.",
+  count:"Choose unit for both products.",
+  length:"Choose cm or metre for both products."
+};
 
 const $ = id => document.getElementById(id);
 let basis = "kg";
+let basisManuallyChanged = false;
 
 function cleanName(value, fallback) {
   return value.trim() || fallback;
@@ -19,6 +38,31 @@ function money(value) {
 
 function quantity(value) {
   return Number(value).toLocaleString("en-ZA", { maximumFractionDigits: 4 });
+}
+
+function setBasis(nextBasis, manual = false) {
+  if (!factors[nextBasis]) return;
+  basis = nextBasis;
+  if (manual) basisManuallyChanged = true;
+  document.querySelectorAll("[data-basis]").forEach(button => {
+    button.classList.toggle("active", button.dataset.basis === basis);
+  });
+}
+
+function autoSelectBasis(firstUnit) {
+  if (basisManuallyChanged) return;
+  const family = families[firstUnit];
+  setBasis(familyBases[family]);
+}
+
+function showWarning(message) {
+  $("pc-warning").innerHTML = '<strong>These products cannot be compared directly.</strong><p>' + message + "</p>";
+  $("pc-warning").hidden = false;
+}
+
+function hideWarning() {
+  $("pc-warning").hidden = true;
+  $("pc-warning").textContent = "";
 }
 
 function calculate() {
@@ -40,6 +84,7 @@ function calculate() {
 
   const valid = [a,b].every(p => Number.isFinite(p.qty) && p.qty > 0 && Number.isFinite(p.price) && p.price >= 0);
   if (!valid) {
+    hideWarning();
     $("pc-primary").textContent = "Enter valid quantities and prices";
     $("pc-sub").textContent = "";
     $("pc-highlight").textContent = "";
@@ -48,6 +93,22 @@ function calculate() {
     return;
   }
   $("pc-primary").className = "pc-big";
+
+  if (families[a.unit] !== families[b.unit]) {
+    const firstFamily = families[a.unit];
+    showWarning(
+      a.name + " uses " + familyLabel(firstFamily) + " while " + b.name + " uses " +
+      familyLabel(families[b.unit]) + ". " + familySuggestions[firstFamily] +
+      " You can change Product B's unit, or use two products measured in the same type of unit."
+    );
+    $("pc-primary").textContent = "Comparison not available";
+    $("pc-sub").textContent = a.name + ": " + labels[a.unit] + " • " + b.name + ": " + labels[b.unit];
+    $("pc-highlight").textContent = "Select compatible units to compare prices";
+    $("pc-detail").textContent = "";
+    return;
+  }
+
+  hideWarning();
 
   const baseFactor = factors[basis];
   const aNormalizedQty = a.qty * factors[a.unit] / baseFactor;
@@ -80,8 +141,6 @@ function calculate() {
 
   percent = expensivePrice === 0 ? 0 : ((expensivePrice - cheapPrice) / expensivePrice) * 100;
   const savingPerUnit = expensivePrice - cheapPrice;
-
-  // Compare buying the cheaper product's original quantity at the expensive product's normalized price.
   totalSaving = (expensivePrice * cheapQty) - cheap.price;
   if (totalSaving < 0 && totalSaving > -0.000001) totalSaving = 0;
 
@@ -94,17 +153,31 @@ function calculate() {
     '<div class="detail-item"><span class="detail-label">Total saving on ' + quantity(cheapQty) + " " + labels[basis] + '</span><span class="detail-value">' + money(totalSaving) + "</span></div>";
 }
 
+function familyLabel(family) {
+  return {
+    mass:"mass units",
+    volume:"volume units",
+    count:"unit counts",
+    length:"length units"
+  }[family];
+}
+
 document.querySelectorAll("[data-basis]").forEach(button => {
   button.addEventListener("click", () => {
-    basis = button.dataset.basis;
-    document.querySelectorAll("[data-basis]").forEach(b => b.classList.toggle("active", b === button));
+    setBasis(button.dataset.basis, true);
     calculate();
   });
 });
 
 document.querySelectorAll("input, select").forEach(control => {
   control.addEventListener("input", calculate);
-  control.addEventListener("change", calculate);
+  control.addEventListener("change", () => {
+    if (control.id === "unit-a" && !basisManuallyChanged) {
+      autoSelectBasis(control.value);
+    }
+    calculate();
+  });
 });
 
+autoSelectBasis($("unit-a").value);
 calculate();

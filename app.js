@@ -55,6 +55,21 @@ function autoSelectBasis(firstUnit) {
   setBasis(familyBases[family]);
 }
 
+function syncProductBUnits() {
+  const family = families[$("unit-a").value];
+  const select = $("unit-b");
+  const currentFamily = families[select.value];
+
+  Array.from(select.options).forEach(option => {
+    option.hidden = families[option.value] !== family;
+  });
+
+  if (currentFamily !== family) {
+    const replacement = Object.keys(families).find(unit => families[unit] === family);
+    if (replacement) select.value = replacement;
+  }
+}
+
 function showWarning(message) {
   $("pc-warning").innerHTML = '<strong>These products cannot be compared directly.</strong><p>' + message + "</p>";
   $("pc-warning").hidden = false;
@@ -95,15 +110,29 @@ function calculate() {
   $("pc-primary").className = "pc-big";
 
   if (families[a.unit] !== families[b.unit]) {
-    const firstFamily = families[a.unit];
-    showWarning(
-      a.name + " uses " + familyLabel(firstFamily) + " while " + b.name + " uses " +
-      familyLabel(families[b.unit]) + ". " + familySuggestions[firstFamily] +
-      " You can change Product B's unit, or use two products measured in the same type of unit."
-    );
+    syncProductBUnits();
+    b.unit = $("unit-b").value;
+  }
+
+  if (families[a.unit] !== families[b.unit]) {
     $("pc-primary").textContent = "Comparison not available";
     $("pc-sub").textContent = a.name + ": " + labels[a.unit] + " • " + b.name + ": " + labels[b.unit];
     $("pc-highlight").textContent = "Select compatible units to compare prices";
+    $("pc-detail").textContent = "";
+    return;
+  }
+
+  const basisFamily = families[basis];
+  const productFamily = families[a.unit];
+  if (basisFamily !== productFamily) {
+    showWarning(
+      "The comparison basis is " + labels[basis] + ", but these products are measured in " +
+      familyLabel(productFamily) + ". " + familySuggestions[productFamily] +
+      " Choose a compatible comparison unit, or change Product A and Product B to the same unit family."
+    );
+    $("pc-primary").textContent = "Comparison basis is not compatible";
+    $("pc-sub").textContent = a.name + ": " + labels[a.unit] + " • " + b.name + ": " + labels[b.unit];
+    $("pc-highlight").textContent = "Choose a " + familyLabel(productFamily) + " comparison unit";
     $("pc-detail").textContent = "";
     return;
   }
@@ -172,12 +201,14 @@ document.querySelectorAll("[data-basis]").forEach(button => {
 document.querySelectorAll("input, select").forEach(control => {
   control.addEventListener("input", calculate);
   control.addEventListener("change", () => {
-    if (control.id === "unit-a" && !basisManuallyChanged) {
-      autoSelectBasis(control.value);
+    if (control.id === "unit-a") {
+      syncProductBUnits();
+      if (!basisManuallyChanged) autoSelectBasis(control.value);
     }
     calculate();
   });
 });
 
+syncProductBUnits();
 autoSelectBasis($("unit-a").value);
 calculate();
